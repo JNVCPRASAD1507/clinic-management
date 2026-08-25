@@ -1,0 +1,8 @@
+import api from './api'
+export const authApi={register:d=>api.post('/auth/register',d),login:d=>api.post('/auth/login',d)}
+export const doctorsApi={list:p=>api.get('/doctors',{params:p}),get:id=>api.get(`/doctors/${id}`),create:d=>api.post('/doctors',d),update:(id,d)=>api.put(`/doctors/${id}`,d),remove:id=>api.delete(`/doctors/${id}`)}
+export const patientsApi={list:p=>api.get('/patients',{params:p}),get:id=>api.get(`/patients/${id}`),create:d=>api.post('/patients',d),update:(id,d)=>api.put(`/patients/${id}`,d),remove:id=>api.delete(`/patients/${id}`)}
+export const appointmentsApi={list:p=>api.get('/appointments',{params:p}),get:id=>api.get(`/appointments/${id}`),create:d=>api.post('/appointments',d),update:(id,d)=>api.put(`/appointments/${id}`,d),cancel:id=>api.delete(`/appointments/${id}`)}
+export const prescriptionsApi={list:p=>api.get('/prescriptions',{params:p}),get:id=>api.get(`/prescriptions/${id}`),create:d=>api.post('/prescriptions',d),update:(id,d)=>api.put(`/prescriptions/${id}`,d)}
+export const recordsApi={upload:(patientId,file)=>{const f=new FormData();f.append('file',file);return api.post(`/medical-records/upload?patient_id=${patientId}`,f,{headers:{'Content-Type':'multipart/form-data'}})},history:patientId=>api.get(`/medical-records/${patientId}`),download:(patientId,recordId)=>api.get(`/medical-records/${patientId}/download/${recordId}`,{responseType:'blob'})}
+export const reportsApi={dashboard:()=>api.get('/reports/dashboard'),appointments:()=>api.get('/reports/appointments'),doctors:()=>api.get('/reports/doctors'),exportCsv:()=>api.get('/reports/appointments/export',{responseType:'blob'})}
