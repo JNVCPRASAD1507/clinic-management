@@ -1,28 +1,34 @@
-import csv, io
-from datetime import date, timedelta
+from datetime import date
 from fastapi import APIRouter, Depends
-from fastapi.responses import StreamingResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.models.entities import Appointment, AppointmentStatus, Doctor, Patient, User, UserRole
-from app.core.security import require_roles
+from app.dependencies import require_role
+from app.models.appointment import Appointment
+from app.models.doctor import Doctor
+from app.models.patient import Patient
+from app.schemas.report import DashboardResponse
+
 router=APIRouter(prefix="/reports",tags=["Reports"])
-@router.get("/dashboard")
-def dashboard(db:Session=Depends(get_db),_:User=Depends(require_roles(UserRole.ADMIN))):
-    today=date.today(); total=db.query(Appointment).count()
-    completed=db.query(Appointment).filter(Appointment.status==AppointmentStatus.COMPLETED).count()
-    cancelled=db.query(Appointment).filter(Appointment.status==AppointmentStatus.CANCELLED).count()
-    most=db.query(Doctor.full_name,func.count(Appointment.id).label("visits")).join(Appointment).group_by(Doctor.id).order_by(func.count(Appointment.id).desc()).first()
-    return {"total_patients":db.query(Patient).count(),"total_doctors":db.query(Doctor).count(),"todays_appointments":db.query(Appointment).filter(Appointment.appointment_date==today).count(),"upcoming_appointments":db.query(Appointment).filter(Appointment.appointment_date>today,Appointment.status.notin_([AppointmentStatus.CANCELLED,AppointmentStatus.COMPLETED])).count(),"completed_appointments":completed,"cancelled_appointments":cancelled,"most_visited_doctor":most[0] if most else None,"average_daily_appointments":round(total/max((today-date(2026,1,1)).days,1),2)}
+
+@router.get("/dashboard",response_model=DashboardResponse)
+def dashboard(db:Session=Depends(get_db),current_user=Depends(require_role("Admin"))):
+    today=date.today()
+    total_patients=db.query(Patient).count(); total_doctors=db.query(Doctor).count()
+    todays=db.query(Appointment).filter(Appointment.appointment_date==today).count()
+    upcoming=db.query(Appointment).filter(Appointment.appointment_date>today,Appointment.status!="Cancelled").count()
+    completed=db.query(Appointment).filter(Appointment.status=="Completed").count()
+    cancelled=db.query(Appointment).filter(Appointment.status=="Cancelled").count()
+    most=db.query(Doctor.full_name,func.count(Appointment.id).label("n")).join(Appointment,Appointment.doctor_id==Doctor.id).group_by(Doctor.id,Doctor.full_name).order_by(func.count(Appointment.id).desc()).first()
+    first=db.query(func.min(Appointment.appointment_date)).scalar()
+    avg=round(db.query(Appointment).count()/((today-first).days+1),2) if first else 0
+    return {"total_patients":total_patients,"total_doctors":total_doctors,"todays_appointments":todays,"upcoming_appointments":upcoming,"completed_appointments":completed,"cancelled_appointments":cancelled,"most_visited_doctor":most.full_name if most else None,"average_daily_appointments":avg}
+
 @router.get("/appointments")
-def appointment_report(db:Session=Depends(get_db),_:User=Depends(require_roles(UserRole.ADMIN))):
-    return db.query(Appointment).order_by(Appointment.appointment_date.desc()).all()
+def appointment_report(db:Session=Depends(get_db),current_user=Depends(require_role("Admin"))):
+    items=db.query(Appointment).all()
+    return {"total":len(items),"appointments":items}
+
 @router.get("/doctors")
-def doctor_report(db:Session=Depends(get_db),_:User=Depends(require_roles(UserRole.ADMIN))):
-    return db.query(Doctor.full_name,Doctor.specialization,func.count(Appointment.id).label("appointments")).outerjoin(Appointment).group_by(Doctor.id).order_by(func.count(Appointment.id).desc()).all()
-@router.get("/appointments/export")
-def export_csv(db:Session=Depends(get_db),_:User=Depends(require_roles(UserRole.ADMIN))):
-    output=io.StringIO();w=csv.writer(output);w.writerow(["Appointment Number","Patient","Doctor","Date","Time","Status"])
-    for a in db.query(Appointment).all():w.writerow([a.appointment_number,a.patient.full_name,a.doctor.full_name,a.appointment_date,a.time_slot,a.status.value])
-    output.seek(0);return StreamingResponse(iter([output.getvalue()]),media_type="text/csv",headers={"Content-Disposition":"attachment; filename=appointments.csv"})
+def doctor_report(db:Session=Depends(get_db),current_user=Depends(require_role("Admin"))):
+    return [{"doctor_id":d.id,"doctor_name":d.full_name,"specialization":d.specialization,"total_appointments":db.query(Appointment).filter(Appointment.doctor_id==d.id).count()} for d in db.query(Doctor).all()]

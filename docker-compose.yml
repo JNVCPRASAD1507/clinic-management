@@ -1,19 +1,44 @@
 services:
   db:
-    image: postgres:16
+    image: postgres:16-alpine
     environment:
       POSTGRES_DB: clinic_management
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports: ["5432:5432"]
-    volumes: ["pgdata:/var/lib/postgresql/data"]
+      POSTGRES_USER: clinic
+      POSTGRES_PASSWORD: clinic_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U clinic -d clinic_management"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/clinic_management
-      SECRET_KEY: change-this-in-production
-      FRONTEND_URL: http://localhost:5173
-    ports: ["8000:8000"]
-    depends_on: [db]
+      DATABASE_URL: postgresql+psycopg2://clinic:clinic_password@db:5432/clinic_management
+      SECRET_KEY: change-this-before-production
+      ALGORITHM: HS256
+      ENVIRONMENT: production
+      CORS_ORIGINS: http://localhost:5173
+      UPLOAD_DIR: /app/uploads/medical_records
+    ports:
+      - "8000:8000"
+    volumes:
+      - medical_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
 volumes:
-  pgdata:
+  postgres_data:
+  medical_uploads:

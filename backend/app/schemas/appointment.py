@@ -1,16 +1,9 @@
 from datetime import date
 from typing import Literal
+from pydantic import BaseModel, ConfigDict, Field
 
-from pydantic import BaseModel
 
-
-AppointmentStatus = Literal[
-    "Scheduled",
-    "Confirmed",
-    "Completed",
-    "Cancelled",
-    "No Show"
-]
+AppointmentStatus = Literal["Scheduled","Confirmed","Completed","Cancelled","No Show"]
 
 
 class AppointmentCreate(BaseModel):
@@ -18,7 +11,7 @@ class AppointmentCreate(BaseModel):
     doctor_id: int
     appointment_date: date
     time_slot: str
-    reason: str
+    reason: str = Field(min_length=2)
 
 
 class AppointmentUpdate(BaseModel):
@@ -29,6 +22,7 @@ class AppointmentUpdate(BaseModel):
 
 
 class AppointmentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     appointment_number: str
     patient_id: int
@@ -37,6 +31,3 @@ class AppointmentResponse(BaseModel):
     time_slot: str
     reason: str
     status: AppointmentStatus
-
-    class Config:
-        from_attributes = True

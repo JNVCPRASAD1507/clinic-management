@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PatientCreate(BaseModel):
-    full_name: str
-    age: int
+    full_name: str = Field(min_length=2, max_length=100)
+    age: int = Field(ge=0, le=130)
     gender: str
     phone: str
     address: str
@@ -12,7 +12,5 @@ class PatientCreate(BaseModel):
 
 
 class PatientResponse(PatientCreate):
+    model_config = ConfigDict(from_attributes=True)
     id: int
-
-    class Config:
-        from_attributes = True
