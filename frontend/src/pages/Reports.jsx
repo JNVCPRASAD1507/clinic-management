@@ -1,2 +1,70 @@
-import {useEffect,useState} from "react";import api,{apiError} from "../lib/api";import PageHeader from "../components/PageHeader";
-export default function Reports(){const [dashboard,setDashboard]=useState(null),[doctors,setDoctors]=useState([]),[error,setError]=useState("");useEffect(()=>{Promise.all([api.get("/reports/dashboard"),api.get("/reports/doctors")]).then(([d,dr])=>{setDashboard(d.data);setDoctors(dr.data)}).catch(e=>setError(apiError(e)))},[]);return <><PageHeader title="Reports" description="Operational performance and clinic activity."/>{error&&<div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}{dashboard&&<><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[["Total patients",dashboard.total_patients],["Total doctors",dashboard.total_doctors],["Upcoming",dashboard.upcoming_appointments],["Average daily",dashboard.average_daily_appointments]].map(([a,b])=><div className="card p-5" key={a}><p className="text-sm text-slate-500">{a}</p><p className="mt-2 text-3xl font-bold">{b}</p></div>)}</div><div className="card mt-6 overflow-hidden"><div className="border-b p-5"><h2 className="font-bold">Doctor activity</h2><p className="text-xs text-slate-500">Appointments by doctor</p></div><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-5 py-3">Doctor</th><th className="px-5 py-3">Specialization</th><th className="px-5 py-3">Appointments</th></tr></thead><tbody>{doctors.map(d=><tr className="border-t" key={d.doctor_id}><td className="px-5 py-4 font-semibold">{d.doctor_name}</td><td className="px-5 py-4">{d.specialization}</td><td className="px-5 py-4">{d.total_appointments}</td></tr>)}</tbody></table></div></>}</>}
+import { useEffect, useState } from "react";
+import api, { apiError } from "../lib/api";
+import PageHeader from "../components/PageHeader";
+export default function Reports() {
+  const [dashboard, setDashboard] = useState(null),
+    [doctors, setDoctors] = useState([]),
+    [error, setError] = useState("");
+  useEffect(() => {
+    Promise.all([api.get("/reports/dashboard"), api.get("/reports/doctors")])
+      .then(([d, dr]) => {
+        setDashboard(d.data);
+        setDoctors(dr.data);
+      })
+      .catch((e) => setError(apiError(e)));
+  }, []);
+  return (
+    <>
+      <PageHeader
+        title="Reports"
+        description="Operational performance and clinic activity."
+      />
+      {error && (
+        <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {dashboard && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              ["Total patients", dashboard.total_patients],
+              ["Total doctors", dashboard.total_doctors],
+              ["Upcoming", dashboard.upcoming_appointments],
+              ["Average daily", dashboard.average_daily_appointments],
+            ].map(([a, b]) => (
+              <div className="card p-5" key={a}>
+                <p className="text-sm text-slate-500">{a}</p>
+                <p className="mt-2 text-3xl font-bold">{b}</p>
+              </div>
+            ))}
+          </div>
+          <div className="card mt-6 overflow-hidden">
+            <div className="border-b p-5">
+              <h2 className="font-bold">Doctor activity</h2>
+              <p className="text-xs text-slate-500">Appointments by doctor</p>
+            </div>
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-5 py-3">Doctor</th>
+                  <th className="px-5 py-3">Specialization</th>
+                  <th className="px-5 py-3">Appointments</th>
+                </tr>
+              </thead>
+              <tbody>
+                {doctors.map((d) => (
+                  <tr className="border-t" key={d.doctor_id}>
+                    <td className="px-5 py-4 font-semibold">{d.doctor_name}</td>
+                    <td className="px-5 py-4">{d.specialization}</td>
+                    <td className="px-5 py-4">{d.total_appointments}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </>
+  );
+}

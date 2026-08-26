@@ -7,7 +7,9 @@ from app.db.base import Base
 class Appointment(Base):
     __tablename__ = "appointments"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    appointment_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    appointment_number: Mapped[str] = mapped_column(
+        String(50), unique=True, nullable=False, index=True
+    )
     patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"), nullable=False)
     doctor_id: Mapped[int] = mapped_column(ForeignKey("doctors.id"), nullable=False)
     appointment_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -17,4 +19,6 @@ class Appointment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     patient = relationship("Patient", back_populates="appointments")
     doctor = relationship("Doctor", back_populates="appointments")
-    prescription = relationship("Prescription", back_populates="appointment", uselist=False)
+    prescription = relationship(
+        "Prescription", back_populates="appointment", uselist=False
+    )

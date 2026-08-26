@@ -1,2 +1,54 @@
-import {BrowserRouter,Routes,Route} from "react-router-dom";import {AuthProvider} from "./context/AuthContext";import ProtectedRoute from "./components/ProtectedRoute";import Layout from "./components/Layout";import Login from "./pages/Login";import Register from "./pages/Register";import Dashboard from "./pages/Dashboard";import Patients from "./pages/Patients";import Doctors from "./pages/Doctors";import Appointments from "./pages/Appointments";import Prescriptions from "./pages/Prescriptions";import MedicalRecords from "./pages/MedicalRecords";import Reports from "./pages/Reports";
-export default function App(){return <AuthProvider><BrowserRouter><Routes><Route path="/login" element={<Login/>}/><Route path="/register" element={<Register/>}/><Route element={<ProtectedRoute><Layout/></ProtectedRoute>}><Route index element={<Dashboard/>}/><Route path="appointments" element={<Appointments/>}/><Route path="patients" element={<Patients/>}/><Route path="doctors" element={<Doctors/>}/><Route path="prescriptions" element={<ProtectedRoute roles={["Admin","Doctor"]}><Prescriptions/></ProtectedRoute>}/><Route path="records" element={<MedicalRecords/>}/><Route path="reports" element={<ProtectedRoute roles={["Admin"]}><Reports/></ProtectedRoute>}/></Route></Routes></BrowserRouter></AuthProvider>}
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Patients from "./pages/Patients";
+import Doctors from "./pages/Doctors";
+import Appointments from "./pages/Appointments";
+import Prescriptions from "./pages/Prescriptions";
+import MedicalRecords from "./pages/MedicalRecords";
+import Reports from "./pages/Reports";
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="appointments" element={<Appointments />} />
+            <Route path="patients" element={<Patients />} />
+            <Route path="doctors" element={<Doctors />} />
+            <Route
+              path="prescriptions"
+              element={
+                <ProtectedRoute roles={["Admin", "Doctor"]}>
+                  <Prescriptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="records" element={<MedicalRecords />} />
+            <Route
+              path="reports"
+              element={
+                <ProtectedRoute roles={["Admin"]}>
+                  <Reports />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}

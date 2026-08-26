@@ -7,8 +7,10 @@ from app.models.patient import Patient
 
 ALLOWED_TYPES = {"application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png"}
 
+
 class MedicalRecordService:
-    def __init__(self, db: Session): self.db = db
+    def __init__(self, db: Session):
+        self.db = db
 
     def upload(self, patient_id: int, file: UploadFile):
         if not self.db.query(Patient).filter(Patient.id == patient_id).first():
@@ -21,6 +23,13 @@ class MedicalRecordService:
         path = os.path.join(settings.upload_dir, unique_name)
         with open(path, "wb") as buffer:
             buffer.write(file.file.read())
-        record = MedicalRecord(patient_id=patient_id, file_name=file.filename or unique_name, file_path=path, file_type=extension)
-        self.db.add(record); self.db.commit(); self.db.refresh(record)
+        record = MedicalRecord(
+            patient_id=patient_id,
+            file_name=file.filename or unique_name,
+            file_path=path,
+            file_type=extension,
+        )
+        self.db.add(record)
+        self.db.commit()
+        self.db.refresh(record)
         return record

@@ -1,6 +1,139 @@
-import {useEffect,useState} from "react"; import {CalendarDays,CheckCircle2,Clock3,Stethoscope,Users,ArrowUpRight} from "lucide-react"; import api,{apiError} from "../lib/api"; import PageHeader from "../components/PageHeader"; import StatusBadge from "../components/StatusBadge"; import {useAuth} from "../context/AuthContext";
-export default function Dashboard(){const {user}=useAuth();const [data,setData]=useState(null);const [appointments,setAppointments]=useState([]);const [patients,setPatients]=useState([]);const [doctors,setDoctors]=useState([]);const [error,setError]=useState("");
- useEffect(()=>{Promise.all([api.get("/appointments?page=1&page_size=5&sort_by=appointment_date&sort_order=asc"),api.get("/patients"),api.get("/doctors")]).then(([a,p,d])=>{setAppointments(a.data);setPatients(p.data);setDoctors(d.data)}).catch(e=>setError(apiError(e))); if(user.role==="Admin") api.get("/reports/dashboard").then(r=>setData(r.data)).catch(e=>setError(apiError(e)));},[user.role]);
- const cards=user.role==="Admin"&&data?[["Patients",data.total_patients,Users],["Doctors",data.total_doctors,Stethoscope],["Today",data.todays_appointments,CalendarDays],["Completed",data.completed_appointments,CheckCircle2]]:[["Patients",patients.length,Users],["Doctors",doctors.length,Stethoscope],["Appointments",appointments.length,CalendarDays],["Upcoming",data?.upcoming_appointments??"—",Clock3]];
- return <><PageHeader title={`Good day, ${user.full_name.split(" ")[0]}`} description="Here is your clinic overview for today."/><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{cards.map(([label,value,Icon])=><div className="card p-5" key={label}><div className="flex items-center justify-between"><span className="text-sm font-medium text-slate-500">{label}</span><span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-brand-700"><Icon size={18}/></span></div><p className="mt-4 text-3xl font-bold">{value}</p></div>)}</div>{error&&<p className="mt-5 text-sm text-red-600">{error}</p>}<div className="mt-6 grid gap-6 xl:grid-cols-3"><div className="card xl:col-span-2"><div className="flex items-center justify-between border-b p-5"><div><h2 className="font-bold">Upcoming appointments</h2><p className="text-xs text-slate-500">Your next scheduled visits</p></div><ArrowUpRight size={18} className="text-slate-400"/></div><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-5 py-3">Appointment</th><th className="px-5 py-3">Date</th><th className="px-5 py-3">Time</th><th className="px-5 py-3">Status</th></tr></thead><tbody>{appointments.map(a=><tr key={a.id} className="border-t"><td className="px-5 py-3 font-semibold">{a.appointment_number}</td><td className="px-5 py-3">{a.appointment_date}</td><td className="px-5 py-3">{a.time_slot}</td><td className="px-5 py-3"><StatusBadge status={a.status}/></td></tr>)}</tbody></table></div></div><div className="card p-5"><h2 className="font-bold">Clinic snapshot</h2><div className="mt-5 space-y-4">{[["Most visited doctor",data?.most_visited_doctor||"—"],["Average daily appointments",data?.average_daily_appointments??"—"],["Cancelled appointments",data?.cancelled_appointments??"—"]].map(([a,b])=><div key={a} className="flex justify-between gap-3 border-b pb-3 text-sm"><span className="text-slate-500">{a}</span><span className="font-semibold text-right">{b}</span></div>)}</div></div></div></>
+import { useEffect, useState } from "react";
+import {
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  Stethoscope,
+  Users,
+  ArrowUpRight,
+} from "lucide-react";
+import api, { apiError } from "../lib/api";
+import PageHeader from "../components/PageHeader";
+import StatusBadge from "../components/StatusBadge";
+import { useAuth } from "../context/AuthContext";
+export default function Dashboard() {
+  const { user } = useAuth();
+  const [data, setData] = useState(null);
+  const [appointments, setAppointments] = useState([]);
+  const [patients, setPatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    Promise.all([
+      api.get(
+        "/appointments?page=1&page_size=5&sort_by=appointment_date&sort_order=asc",
+      ),
+      api.get("/patients"),
+      api.get("/doctors"),
+    ])
+      .then(([a, p, d]) => {
+        setAppointments(a.data);
+        setPatients(p.data);
+        setDoctors(d.data);
+      })
+      .catch((e) => setError(apiError(e)));
+    if (user.role === "Admin")
+      api
+        .get("/reports/dashboard")
+        .then((r) => setData(r.data))
+        .catch((e) => setError(apiError(e)));
+  }, [user.role]);
+  const cards =
+    user.role === "Admin" && data
+      ? [
+          ["Patients", data.total_patients, Users],
+          ["Doctors", data.total_doctors, Stethoscope],
+          ["Today", data.todays_appointments, CalendarDays],
+          ["Completed", data.completed_appointments, CheckCircle2],
+        ]
+      : [
+          ["Patients", patients.length, Users],
+          ["Doctors", doctors.length, Stethoscope],
+          ["Appointments", appointments.length, CalendarDays],
+          ["Upcoming", data?.upcoming_appointments ?? "—", Clock3],
+        ];
+  return (
+    <>
+      <PageHeader
+        title={`Good day, ${user.full_name.split(" ")[0]}`}
+        description="Here is your clinic overview for today."
+      />
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map(([label, value, Icon]) => (
+          <div className="card p-5" key={label}>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-500">
+                {label}
+              </span>
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-brand-700">
+                <Icon size={18} />
+              </span>
+            </div>
+            <p className="mt-4 text-3xl font-bold">{value}</p>
+          </div>
+        ))}
+      </div>
+      {error && <p className="mt-5 text-sm text-red-600">{error}</p>}
+      <div className="mt-6 grid gap-6 xl:grid-cols-3">
+        <div className="card xl:col-span-2">
+          <div className="flex items-center justify-between border-b p-5">
+            <div>
+              <h2 className="font-bold">Upcoming appointments</h2>
+              <p className="text-xs text-slate-500">
+                Your next scheduled visits
+              </p>
+            </div>
+            <ArrowUpRight size={18} className="text-slate-400" />
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-5 py-3">Appointment</th>
+                  <th className="px-5 py-3">Date</th>
+                  <th className="px-5 py-3">Time</th>
+                  <th className="px-5 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {appointments.map((a) => (
+                  <tr key={a.id} className="border-t">
+                    <td className="px-5 py-3 font-semibold">
+                      {a.appointment_number}
+                    </td>
+                    <td className="px-5 py-3">{a.appointment_date}</td>
+                    <td className="px-5 py-3">{a.time_slot}</td>
+                    <td className="px-5 py-3">
+                      <StatusBadge status={a.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="card p-5">
+          <h2 className="font-bold">Clinic snapshot</h2>
+          <div className="mt-5 space-y-4">
+            {[
+              ["Most visited doctor", data?.most_visited_doctor || "—"],
+              [
+                "Average daily appointments",
+                data?.average_daily_appointments ?? "—",
+              ],
+              ["Cancelled appointments", data?.cancelled_appointments ?? "—"],
+            ].map(([a, b]) => (
+              <div
+                key={a}
+                className="flex justify-between gap-3 border-b pb-3 text-sm"
+              >
+                <span className="text-slate-500">{a}</span>
+                <span className="font-semibold text-right">{b}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }

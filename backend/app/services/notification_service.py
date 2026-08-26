@@ -7,4 +7,6 @@ def send_appointment_reminder(patient_phone: str, appointment_number: str) -> No
 
 
 def send_prescription_notification(patient_phone: str, prescription_id: int) -> None:
-    print(f"Prescription notification sent to {patient_phone} for prescription {prescription_id}")
+    print(
+        f"Prescription notification sent to {patient_phone} for prescription {prescription_id}"
+    )

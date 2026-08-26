@@ -31,12 +31,16 @@ class AppointmentService:
         self.db.refresh(appointment)
         return appointment
 
-    def update(self, appointment_id: int, data: AppointmentUpdate, user_id: int, user_role: str) -> Appointment:
+    def update(
+        self, appointment_id: int, data: AppointmentUpdate, user_id: int, user_role: str
+    ) -> Appointment:
         appointment = self.repo.get(appointment_id)
         if not appointment:
             raise HTTPException(404, "Appointment not found")
         if user_role == "Doctor":
-            doctor = self.db.query(Doctor).filter(Doctor.id == appointment.doctor_id).first()
+            doctor = (
+                self.db.query(Doctor).filter(Doctor.id == appointment.doctor_id).first()
+            )
             if not doctor or doctor.user_id != user_id:
                 raise HTTPException(403, "Not authorized to update this appointment")
         updates = data.model_dump(exclude_unset=True)
@@ -49,11 +53,14 @@ class AppointmentService:
             setattr(appointment, key, value)
         self.db.commit()
         self.db.refresh(appointment)
-        self.db.add(AuditLog(
-            user_id=user_id, appointment_id=appointment.id,
-            action="APPOINTMENT_UPDATED",
-            description=f"Appointment {appointment.appointment_number} updated. Status: {old[0]} -> {appointment.status}, Date: {old[1]} -> {appointment.appointment_date}, Time: {old[2]} -> {appointment.time_slot}",
-        ))
+        self.db.add(
+            AuditLog(
+                user_id=user_id,
+                appointment_id=appointment.id,
+                action="APPOINTMENT_UPDATED",
+                description=f"Appointment {appointment.appointment_number} updated. Status: {old[0]} -> {appointment.status}, Date: {old[1]} -> {appointment.appointment_date}, Time: {old[2]} -> {appointment.time_slot}",
+            )
+        )
         self.db.commit()
         return appointment
 
@@ -63,9 +70,12 @@ class AppointmentService:
             raise HTTPException(404, "Appointment not found")
         appointment.status = "Cancelled"
         self.db.commit()
-        self.db.add(AuditLog(
-            user_id=user_id, appointment_id=appointment.id,
-            action="APPOINTMENT_CANCELLED",
-            description=f"Appointment {appointment.appointment_number} was cancelled",
-        ))
+        self.db.add(
+            AuditLog(
+                user_id=user_id,
+                appointment_id=appointment.id,
+                action="APPOINTMENT_CANCELLED",
+                description=f"Appointment {appointment.appointment_number} was cancelled",
+            )
+        )
         self.db.commit()

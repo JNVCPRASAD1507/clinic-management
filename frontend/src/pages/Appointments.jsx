@@ -1,3 +1,227 @@
-import {useEffect,useState} from "react";import {Plus,RefreshCw} from "lucide-react";import api,{apiError} from "../lib/api";import PageHeader from "../components/PageHeader";import Modal from "../components/Modal";import StatusBadge from "../components/StatusBadge";import {useAuth} from "../context/AuthContext";
-const blank={patient_id:"",doctor_id:"",appointment_date:"",time_slot:"",reason:""};
-export default function Appointments(){const {user}=useAuth();const [items,setItems]=useState([]),[patients,setPatients]=useState([]),[doctors,setDoctors]=useState([]),[open,setOpen]=useState(false),[form,setForm]=useState(blank),[error,setError]=useState(""),[busy,setBusy]=useState(false);const load=()=>api.get("/appointments?page=1&page_size=100&sort_by=appointment_date&sort_order=asc").then(r=>setItems(r.data)).catch(e=>setError(apiError(e)));useEffect(()=>{load();Promise.all([api.get("/patients"),api.get("/doctors")]).then(([p,d])=>{setPatients(p.data);setDoctors(d.data)}).catch(e=>setError(apiError(e)))},[]);const create=async e=>{e.preventDefault();setBusy(true);try{await api.post("/appointments",{...form,patient_id:Number(form.patient_id),doctor_id:Number(form.doctor_id)});setOpen(false);setForm(blank);load()}catch(e){setError(apiError(e))}finally{setBusy(false)}};const update=async(id,status)=>{try{await api.put(`/appointments/${id}`,{status});load()}catch(e){setError(apiError(e))}};return <><PageHeader title="Appointments" description="Schedule, track and update clinic visits." action={user.role!=="Doctor"&&<button className="btn-primary" onClick={()=>setOpen(true)}><Plus size={17}/>Book appointment</button>}/>{error&&<div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}<div className="card overflow-hidden"><div className="flex justify-end border-b p-3"><button className="btn-secondary" onClick={load}><RefreshCw size={16}/>Refresh</button></div><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-5 py-3">Appointment</th><th className="px-5 py-3">Patient</th><th className="px-5 py-3">Doctor</th><th className="px-5 py-3">Schedule</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Action</th></tr></thead><tbody>{items.map(a=><tr key={a.id} className="border-t"><td className="px-5 py-4 font-semibold">{a.appointment_number}</td><td className="px-5 py-4">{patients.find(x=>x.id===a.patient_id)?.full_name||`#${a.patient_id}`}</td><td className="px-5 py-4">{doctors.find(x=>x.id===a.doctor_id)?.full_name||`#${a.doctor_id}`}</td><td className="px-5 py-4">{a.appointment_date}<br/><span className="text-xs text-slate-500">{a.time_slot}</span></td><td className="px-5 py-4"><StatusBadge status={a.status}/></td><td className="px-5 py-4">{a.status!=="Completed"&&a.status!=="Cancelled"&&<select className="rounded-lg border px-2 py-1 text-xs" value="" onChange={e=>e.target.value&&update(a.id,e.target.value)}><option value="">Update</option><option>Confirmed</option><option>Completed</option><option>No Show</option><option>Cancelled</option></select>}</td></tr>)}</tbody></table></div></div><Modal open={open} onClose={()=>setOpen(false)} title="Book appointment"><form onSubmit={create} className="grid gap-4 sm:grid-cols-2"><div><label className="label">Patient</label><select required className="input" value={form.patient_id} onChange={e=>setForm({...form,patient_id:e.target.value})}><option value="">Select patient</option>{patients.map(p=><option key={p.id} value={p.id}>{p.full_name}</option>)}</select></div><div><label className="label">Doctor</label><select required className="input" value={form.doctor_id} onChange={e=>setForm({...form,doctor_id:e.target.value})}><option value="">Select doctor</option>{doctors.map(d=><option key={d.id} value={d.id}>{d.full_name} · {d.specialization}</option>)}</select></div><div><label className="label">Date</label><input required type="date" className="input" value={form.appointment_date} onChange={e=>setForm({...form,appointment_date:e.target.value})}/></div><div><label className="label">Time slot</label><input required className="input" placeholder="10:00 AM" value={form.time_slot} onChange={e=>setForm({...form,time_slot:e.target.value})}/></div><div className="sm:col-span-2"><label className="label">Reason</label><textarea required className="input min-h-24" value={form.reason} onChange={e=>setForm({...form,reason:e.target.value})}/></div><button disabled={busy} className="btn-primary sm:col-span-2">{busy?"Booking…":"Book appointment"}</button></form></Modal></>}
+import { useEffect, useState } from "react";
+import { Plus, RefreshCw } from "lucide-react";
+import api, { apiError } from "../lib/api";
+import PageHeader from "../components/PageHeader";
+import Modal from "../components/Modal";
+import StatusBadge from "../components/StatusBadge";
+import { useAuth } from "../context/AuthContext";
+const blank = {
+  patient_id: "",
+  doctor_id: "",
+  appointment_date: "",
+  time_slot: "",
+  reason: "",
+};
+export default function Appointments() {
+  const { user } = useAuth();
+  const [items, setItems] = useState([]),
+    [patients, setPatients] = useState([]),
+    [doctors, setDoctors] = useState([]),
+    [open, setOpen] = useState(false),
+    [form, setForm] = useState(blank),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
+  const load = () =>
+    api
+      .get(
+        "/appointments?page=1&page_size=100&sort_by=appointment_date&sort_order=asc",
+      )
+      .then((r) => setItems(r.data))
+      .catch((e) => setError(apiError(e)));
+  useEffect(() => {
+    load();
+    Promise.all([api.get("/patients"), api.get("/doctors")])
+      .then(([p, d]) => {
+        setPatients(p.data);
+        setDoctors(d.data);
+      })
+      .catch((e) => setError(apiError(e)));
+  }, []);
+  const create = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      await api.post("/appointments", {
+        ...form,
+        patient_id: Number(form.patient_id),
+        doctor_id: Number(form.doctor_id),
+      });
+      setOpen(false);
+      setForm(blank);
+      load();
+    } catch (e) {
+      setError(apiError(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const update = async (id, status) => {
+    try {
+      await api.put(`/appointments/${id}`, { status });
+      load();
+    } catch (e) {
+      setError(apiError(e));
+    }
+  };
+  return (
+    <>
+      <PageHeader
+        title="Appointments"
+        description="Schedule, track and update clinic visits."
+        action={
+          user.role !== "Doctor" && (
+            <button className="btn-primary" onClick={() => setOpen(true)}>
+              <Plus size={17} />
+              Book appointment
+            </button>
+          )
+        }
+      />
+      {error && (
+        <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      <div className="card overflow-hidden">
+        <div className="flex justify-end border-b p-3">
+          <button className="btn-secondary" onClick={load}>
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+              <tr>
+                <th className="px-5 py-3">Appointment</th>
+                <th className="px-5 py-3">Patient</th>
+                <th className="px-5 py-3">Doctor</th>
+                <th className="px-5 py-3">Schedule</th>
+                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((a) => (
+                <tr key={a.id} className="border-t">
+                  <td className="px-5 py-4 font-semibold">
+                    {a.appointment_number}
+                  </td>
+                  <td className="px-5 py-4">
+                    {patients.find((x) => x.id === a.patient_id)?.full_name ||
+                      `#${a.patient_id}`}
+                  </td>
+                  <td className="px-5 py-4">
+                    {doctors.find((x) => x.id === a.doctor_id)?.full_name ||
+                      `#${a.doctor_id}`}
+                  </td>
+                  <td className="px-5 py-4">
+                    {a.appointment_date}
+                    <br />
+                    <span className="text-xs text-slate-500">
+                      {a.time_slot}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <StatusBadge status={a.status} />
+                  </td>
+                  <td className="px-5 py-4">
+                    {a.status !== "Completed" && a.status !== "Cancelled" && (
+                      <select
+                        className="rounded-lg border px-2 py-1 text-xs"
+                        value=""
+                        onChange={(e) =>
+                          e.target.value && update(a.id, e.target.value)
+                        }
+                      >
+                        <option value="">Update</option>
+                        <option>Confirmed</option>
+                        <option>Completed</option>
+                        <option>No Show</option>
+                        <option>Cancelled</option>
+                      </select>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Book appointment"
+      >
+        <form onSubmit={create} className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="label">Patient</label>
+            <select
+              required
+              className="input"
+              value={form.patient_id}
+              onChange={(e) => setForm({ ...form, patient_id: e.target.value })}
+            >
+              <option value="">Select patient</option>
+              {patients.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.full_name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Doctor</label>
+            <select
+              required
+              className="input"
+              value={form.doctor_id}
+              onChange={(e) => setForm({ ...form, doctor_id: e.target.value })}
+            >
+              <option value="">Select doctor</option>
+              {doctors.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.full_name} · {d.specialization}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="label">Date</label>
+            <input
+              required
+              type="date"
+              className="input"
+              value={form.appointment_date}
+              onChange={(e) =>
+                setForm({ ...form, appointment_date: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <label className="label">Time slot</label>
+            <input
+              required
+              className="input"
+              placeholder="10:00 AM"
+              value={form.time_slot}
+              onChange={(e) => setForm({ ...form, time_slot: e.target.value })}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="label">Reason</label>
+            <textarea
+              required
+              className="input min-h-24"
+              value={form.reason}
+              onChange={(e) => setForm({ ...form, reason: e.target.value })}
+            />
+          </div>
+          <button disabled={busy} className="btn-primary sm:col-span-2">
+            {busy ? "Booking…" : "Book appointment"}
+          </button>
+        </form>
+      </Modal>
+    </>
+  );
+}

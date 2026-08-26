@@ -6,7 +6,9 @@ from app.db.base import Base
 class Doctor(Base):
     __tablename__ = "doctors"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), unique=True, nullable=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), unique=True, nullable=True
+    )
     full_name: Mapped[str] = mapped_column(String(100), nullable=False)
     specialization: Mapped[str] = mapped_column(String(100), nullable=False)
     qualification: Mapped[str] = mapped_column(String(150), nullable=False)
