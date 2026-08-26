@@ -1,15 +1,65 @@
+# =========================
+# Environment / Secrets
+# =========================
 .env
 .env.*
 !.env.example
-node_modules/
-dist/
-__pycache__/
-*.py[cod]
+
+# =========================
+# Python
+# =========================
 .venv/
 venv/
-uploads/
-*.db
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
 .pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# =========================
+# Uploaded / Generated Files
+# =========================
+uploads/
+
+# =========================
+# Database files
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+
+# =========================
+# Node / React / Vite
+# =========================
+node_modules/
+dist/
+.vite/
+
+# =========================
+# IDE / Editors
+# =========================
 .vscode/
 .idea/
+
+# =========================
+# OS generated files
+# =========================
 .DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# Build / temporary files
+# =========================
+*.tmp
+*.temp
