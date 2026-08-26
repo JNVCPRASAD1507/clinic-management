@@ -21,12 +21,18 @@ export default function Patients() {
     [form, setForm] = useState(blank),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
-  const load = () =>
-    api
-      .get("/patients")
-      .then((r) => setItems(r.data))
-      .catch((e) => setError(apiError(e)));
-  useEffect(load, []);
+  const load = async () => {
+    try {
+      const response = await api.get("/patients");
+      setItems(response.data);
+    } catch (e) {
+      setError(apiError(e));
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
   const save = async (e) => {
     e.preventDefault();
     setBusy(true);
