@@ -5,12 +5,13 @@ import PageHeader from "../components/PageHeader";
 import Modal from "../components/Modal";
 import { useAuth } from "../context/AuthContext";
 const blank = {
-  user_id: "",
+  // user_id: "",
   full_name: "",
   specialization: "",
   qualification: "",
   phone: "",
   email: "",
+  password: "",
   consultation_fee: "",
   available_timings: "09:00 AM - 05:00 PM",
 };
@@ -39,7 +40,6 @@ export default function Doctors() {
     try {
       await api.post("/doctors", {
         ...form,
-        user_id: form.user_id ? Number(form.user_id) : null,
         consultation_fee: Number(form.consultation_fee),
       });
       setOpen(false);
@@ -113,12 +113,12 @@ export default function Doctors() {
       <Modal open={open} onClose={() => setOpen(false)} title="Add doctor">
         <form onSubmit={save} className="grid gap-4 sm:grid-cols-2">
           {[
-            ["user_id", "Doctor user ID"],
             ["full_name", "Full name"],
             ["specialization", "Specialization"],
             ["qualification", "Qualification"],
             ["phone", "Phone"],
             ["email", "Email"],
+            ["password", "Login password"],
             ["consultation_fee", "Consultation fee"],
             ["available_timings", "Available timings"],
           ].map(([k, l]) => (

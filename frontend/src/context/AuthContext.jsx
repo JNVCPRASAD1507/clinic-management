@@ -8,17 +8,23 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const token = localStorage.getItem("clinic_token");
+
     if (!token) {
       setLoading(false);
       return;
     }
+
     api
       .get("/auth/me")
       .then((r) => {
         setUser(r.data);
         localStorage.setItem("clinic_user", JSON.stringify(r.data));
       })
-      .catch(() => {})
+      .catch(() => {
+        localStorage.removeItem("clinic_token");
+        localStorage.removeItem("clinic_user");
+        setUser(null);
+      })
       .finally(() => setLoading(false));
   }, []);
   const login = async (credentials) => {
